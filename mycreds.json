@@ -2,30 +2,18 @@
   "credentials": {
     "peers": [
       {
-        "discovery_host": "26080cd8-f642-4741-bfdb-921ddc9ce2b2_vp1-discovery.blockchain.ibm.com",
+        "discovery_host": "127.0.0.1",
         "discovery_port": 30303,
-        "api_host": "26080cd8-f642-4741-bfdb-921ddc9ce2b2_vp1-api.blockchain.ibm.com",
+        "api_host": "127.0.0.1",
         "api_port_tls": 443,
-        "api_port": 80,
+        "api_port": 5000,
         "type": "peer",
-        "network_id": "26080cd8-f642-4741-bfdb-921ddc9ce2b2",
-        "container_id": "3006a03fd36b47422ef40ff55749e835f2705e1c7854b74e1bc55a29d5687455",
-        "id": "26080cd8-f642-4741-bfdb-921ddc9ce2b2_vp1",
-        "api_url": "http://26080cd8-f642-4741-bfdb-921ddc9ce2b2_vp1-api.blockchain.ibm.com:80"
-      },
-      {
-        "discovery_host": "26080cd8-f642-4741-bfdb-921ddc9ce2b2_vp2-discovery.blockchain.ibm.com",
-        "discovery_port": 30303,
-        "api_host": "26080cd8-f642-4741-bfdb-921ddc9ce2b2_vp2-api.blockchain.ibm.com",
-        "api_port_tls": 443,
-        "api_port": 80,
-        "type": "peer",
-        "network_id": "26080cd8-f642-4741-bfdb-921ddc9ce2b2",
-        "container_id": "ba9a93fc24e73f72ddaa655bcb5b1c541018995e491644459111d2c984204c43",
-        "id": "26080cd8-f642-4741-bfdb-921ddc9ce2b2_vp2",
-        "api_url": "http://26080cd8-f642-4741-bfdb-921ddc9ce2b2_vp2-api.blockchain.ibm.com:80"
+        "network_id": "vp0",
+        "id": "dev_vp0",
+        "api_url": "http://127.0.0.1:5000"
       }
     ],
+    /*
     "ca": {
       "26080cd8-f642-4741-bfdb-921ddc9ce2b2_ca": {
         "url": "26080cd8-f642-4741-bfdb-921ddc9ce2b2_ca-api.blockchain.ibm.com:30303",
@@ -33,12 +21,12 @@
         "discovery_port": 30303,
         "api_host": "26080cd8-f642-4741-bfdb-921ddc9ce2b2_ca-api.blockchain.ibm.com",
         "api_port_tls": 30303,
-        "api_port": 80,
+        "api_port": 5000,
         "type": "ca",
         "network_id": "26080cd8-f642-4741-bfdb-921ddc9ce2b2",
         "container_id": "49256ec6f9aae4726788e43449d6bc020ad462490cce676b65db211539267b36"
       }
-    },
+    },*/
     "users": [
       {
         "username": "user_type1_057b8987f0",
