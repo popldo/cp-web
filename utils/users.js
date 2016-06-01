@@ -15,7 +15,15 @@
 "use strict";
 // This connector let's us register users against a CA
 var connector = require('./loopback-connector-obcca');
-var ibc = {};
+var winston = require('winston');
+var logger = new (winston.Logger)({
+    transports: [
+        new (winston.transports.Console)(),
+        new (winston.transports.File)({ filename: 'var/log/console.log' })
+    ]
+});
+var Ibc1 = require('ibm-blockchain-js');
+var ibc = new Ibc1(logger);
 var chaincode = {};
 var ca = {};
 var dataSource = {};
@@ -32,6 +40,7 @@ var TAG = "user_manager";
  * @param cb A callback of the form: function(err)
  */
 function login(id, secret, cb) {
+    console.log(TAG,"login call : ",id);
     if (!ibc) {
         cb && cb(new Error(TAG + ": No sdk supplied to login users"));
         return;
@@ -39,6 +48,7 @@ function login(id, secret, cb) {
 
     // Just log in users against the first peer, as it is used for all rest calls anyway.
     ibc.register(0, id, secret, 2, function (err, data) {
+        console.log(TAG,"TEST LOGIN : ",id);
         if (err) {
             console.log(TAG, "Error", JSON.stringify(err));
             cb && cb(err)
@@ -128,8 +138,8 @@ module.exports.setup = function (sdk, cc, cert_auth, cb) {
         // Initialize the connector to the CA
         dataSource.settings = {
             host: cert_auth.api_host,
-            port: cert_auth.api_port_tls,
-            secure: true
+            port: cert_auth.api_port,
+            secure: false
         };
 
         console.log(TAG, "initializing ca connection to:", dataSource.settings.host, ":", dataSource.settings.port);

@@ -98,9 +98,6 @@ app.use(function (err, req, res, next) {		// = development error handler, print 
     res.render('template/error', {bag: req.bag});
 });
 
-// Track the application deployments
-require("cf-deployment-tracker-client").track();
-
 // ============================================================================================================================
 // 														Launch Webserver
 // ============================================================================================================================
@@ -109,12 +106,13 @@ var server = http.createServer(app).listen(port, function () {
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 process.env.NODE_ENV = 'production';
 server.timeout = 240000;																							// Ta-da.
-console.log('------------------------------------------ Server Up - ' + host + ':' + port + ' ------------------------------------------');
-if (process.env.PRODUCTION) console.log('Running using Production settings');
-else console.log('Running using Developer settings');
 
-// Track the application deployments
-require("cf-deployment-tracker-client").track();
+console.log('------------------------------------------ Server Up - ' + host + ':' + port + ' ------------------------------------------');
+
+if (process.env.PRODUCTION)
+    console.log('Running using Production settings');
+else
+    console.log('Running using Developer settings');
 
 // ============================================================================================================================
 // ============================================================================================================================
@@ -134,7 +132,7 @@ require("cf-deployment-tracker-client").track();
 // ============================================================================================================================
 // 														Test Area
 // ============================================================================================================================
-var part2 = require('./utils/ws_part2');
+var cpaper = require('./utils/cpaper');
 var ws = require('ws');
 var wss = {};
 var Ibc1 = require('ibm-blockchain-js');
@@ -163,36 +161,6 @@ if (manual.credentials.ca) {
     ca = manual.credentials.ca[ca_name];
 }
 
-if (process.env.VCAP_SERVICES) {															//load from vcap, search for service, 1 of the 3 should be found...
-    var servicesObject = JSON.parse(process.env.VCAP_SERVICES);
-    for (var i in servicesObject) {
-        if (i.indexOf('ibm-blockchain') >= 0) {											// looks close enough (can be suffixed dev, prod, or staging)
-            if (servicesObject[i][0].credentials.error) {
-                console.log('!\n!\n! Error from Bluemix: \n', servicesObject[i][0].credentials.error, '!\n!\n');
-                peers = null;
-                users = null;
-                process.error = {
-                    type: 'network',
-                    msg: "Due to overwhelming demand the IBM Blockchain Network service is at maximum capacity.  Please try recreating this service at a later date."
-                };
-            }
-            if (servicesObject[i][0].credentials && servicesObject[i][0].credentials.peers) {
-                console.log('overwritting peers, loading from a vcap service: ', i);
-                peers = servicesObject[i][0].credentials.peers;
-                var ca_name = Object.keys(servicesObject[i][0].credentials.ca)[0];
-                console.log(TAG, "loading ca:", ca_name);
-                ca = servicesObject[i][0].credentials.ca[ca_name];
-                if (servicesObject[i][0].credentials.users) {
-                    console.log('overwritting users, loading from a vcap service: ', i);
-                    users = servicesObject[i][0].credentials.users;
-                }
-                else users = null;														//no security
-                break;
-            }
-        }
-    }
-}
-
 // Options for the blockchain network
 var options = {};
 
@@ -207,31 +175,27 @@ configure_network();
 // configure ibm-blockchain-js sdk
 // ==================================
 function configure_network() {
-
+    console.log('configure_network Start');
     options = {
         network: {
             peers: peers,
-            users: users
+            users: users,
+            options: {quiet: true, tls:false, maxRetry: 1}
         },
         chaincode: {
             zip_url: 'https://github.com/IBM-Blockchain/cp-chaincode-v2/archive/master.zip',
             unzip_dir: 'cp-chaincode-v2-master/hyperledger',							    //subdirectroy name of chaincode after unzipped
             git_url: 'https://github.com/IBM-Blockchain/cp-chaincode-v2/hyperledger',		//GO get http url
-
-            //hashed cc name from prev deployment
-            //deployed_name: '2450c95bc77e124c766ff650c2f4642e5c0bc2d576ee67db130900750cddc5982e295f320fd5dff7aca2f61fa7cc673fcdcc8a7464f94c68eeccdb14b2384a75'
+            deployed_name: '2450c95bc77e124c766ff650c2f4642e5c0bc2d576ee67db130900750cddc5982e295f320fd5dff7aca2f61fa7cc673fcdcc8a7464f94c68eeccdb14b2384a75'
         }
     };
-    if (process.env.VCAP_SERVICES) {
-        console.log('\n[!] looks like you are in bluemix, I am going to clear out the deploy_name so that it deploys new cc.\n[!] hope that is ok buddy\n');
-        options.chaincode.deployed_name = "";
-    }
-    
+
     ibc.load(options, cb_ready);
 }
 
 var chaincode = null;
 function cb_ready(err, cc) {//response has chaincode functions
+    console.log('cb_ready Start \n');
     if (err != null) {
         console.log('! looks like an error loading the chaincode, app will fail\n', err);
         if (!process.error) process.error = {type: 'load', msg: err.details};				//if it already exist, keep the last error
@@ -254,12 +218,13 @@ function cb_ready(err, cc) {//response has chaincode functions
  * @param err Will capture any errors from deploying the chaincode.
  */
 function finalSetup(err, data) {
+    console.log('finalSetup -- ');
     if (err != null) {
         //look at tutorial_part1.md in the trouble shooting section for help
         console.log('! looks like a deploy error, holding off on the starting the socket\n', err);
         if (!process.error) process.error = {type: 'deploy', msg: err.details};
     } else {
-        part2.setup(ibc, chaincode, users);
+        cpaper.setup(ibc, chaincode, users);
         user_manager.setup(ibc, chaincode, ca, cb_deployed);
     }
 }
@@ -281,7 +246,7 @@ function cb_deployed(e, d) {
             ws.on('message', function incoming(message) {
                 console.log('received ws msg:', message);
                 var data = JSON.parse(message);
-                part2.process_msg(ws, data);
+                cpaper.process_msg(ws, data);
             });
 
             ws.on('close', function () {
